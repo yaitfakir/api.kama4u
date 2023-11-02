@@ -4,17 +4,17 @@ const connectDB = require("./middleware/db");
 const cors = require("cors");
 const verifyToken = require("./middleware/auth");
 
+// Connect to database
+connectDB();
+// app.use(express.json());
+app.use(express.json());
+
 // Cors
 app.use(
   cors({
     origin: "*",
   })
 );
-
-// Connect to database
-connectDB();
-// app.use(express.json());
-app.use(express.json());
 
 console.log("FrontEnd running ", process.env.CLIENT_URL);
 

@@ -3,6 +3,18 @@ const router = express.Router();
 const logger = require("../utils/logger");
 const Sub = require("../utils/subscription");
 
+router.get("/", async (req, res) => {
+  try {
+    return res.status(200).json({ message: "kamas4u works" });
+  } catch (err) {
+    await logger(req, "Error", err);
+
+    console.log("An error occured");
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
 router.post("/contact-us", async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
