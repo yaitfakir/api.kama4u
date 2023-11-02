@@ -11,7 +11,13 @@ const orderSchema = new mongoose.Schema({
   description: { type: String },
   createdAt: { type: Date, default: Date.now },
   status: { type: String },
-  actions: [{ createdAt: { type: Date, default: Date.now }, action: String }],
+  actions: [
+    {
+      createdAt: { type: Date, default: Date.now },
+      action: String,
+      motif: String,
+    },
+  ],
   owner: { type: mongoose.Types.ObjectId, ref: "User" },
   type: { type: String }, //Sell, Buy, Exchange
   currency: { type: String },

@@ -31,6 +31,7 @@ router.post("/add", async (req, res) => {
       codeForExchange: codeForExchange,
       description: description,
       status: process.env.PENDING,
+      actions: [{ action: "Pending" }],
       owner: usid,
       type: type,
     });
@@ -49,7 +50,10 @@ router.post("/list", async (req, res) => {
     var { paginator, filter } = req.body;
     let id = mongoose.Types.ObjectId(usid);
 
-    filter = { ...filter, owner: id };
+    if (role != process.env.SUP_ADMIN) {
+      filter = { ...filter, owner: id };
+    }
+
     const pipline = [
       {
         $match: filter,
@@ -88,7 +92,7 @@ router.post("/list", async (req, res) => {
 router.post("/action", async (req, res) => {
   try {
     const { role } = req.user;
-    const { idOrder, action } = req.body;
+    const { idOrder, action, motif } = req.body;
     let id = mongoose.Types.ObjectId(idOrder);
 
     if (role != process.env.SUP_ADMIN) {
@@ -97,19 +101,51 @@ router.post("/action", async (req, res) => {
       });
     }
 
-    const order = await Order.findOneAndUpdate(
-      { _id: id },
-      {
-        status: action,
-        $push: { actions: { action: action } },
-      }
-    );
+    if (["Issue", "Refund"].includes(action) && !motif) {
+      return res.status(400).json({
+        error: "You should insert a Description !!!",
+      });
+    }
+    const existOrder = await Order.findOne({ _id: id });
+    const existAction = existOrder?.status;
 
-    return res.status(200).json({ message: order });
+    if (existOrder) {
+      let possibleAction = GetPossibleActions(existAction);
+      let shouldAction = possibleAction.includes(action);
+      if (shouldAction) {
+        existOrder.status = action;
+        existOrder.actions.push({ action, motif });
+        existOrder.save();
+      } else
+        return res.status(404).json({
+          error: "Action not Possible !!!",
+        });
+    } else
+      return res.status(404).json({
+        error: "Order Doesn't Exist !!!",
+      });
+
+    return res.status(200).json({ message: existOrder });
   } catch (err) {
     await logger(req, "Error", err);
     console.log(err);
     return res.status(500).json("An error occured");
   }
 });
+
+function GetPossibleActions(action) {
+  switch (action) {
+    case "Pending":
+      return ["Accepted", "Canceled"];
+    case "Accepted":
+      return ["Paid", "Canceled"];
+    case "Paid" || "Issue" || "Refund":
+      return ["Closed"];
+    case "Canceled":
+      return ["Issue", "Refund"];
+    default:
+      break;
+  }
+  return [];
+}
 module.exports = router;
