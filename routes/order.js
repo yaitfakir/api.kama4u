@@ -4,7 +4,52 @@ const logger = require("../utils/logger");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
 
-router.post("/add", async (req, res) => {
+router.post("/list", async (req, res) => {
+  try {
+    var { usid, role } = req.user;
+    var { paginator, filter } = req.body;
+    let id = mongoose.Types.ObjectId(usid);
+
+    if (role != process.env.SUP_ADMIN) {
+      filter = { ...filter, owner: id };
+    }
+
+    const pipline = [
+      {
+        $match: filter,
+      },
+      {
+        $sort: {
+          _id: -1,
+        },
+      },
+      {
+        $skip: paginator?.skip || 0,
+      },
+      {
+        $limit: paginator?.limit || 10,
+      },
+    ];
+    const data = await Order.aggregate(pipline);
+    const count = await Order.countDocuments(filter);
+
+    var result = {
+      count: count,
+      data: data,
+    };
+    if (result) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(403).json("No Order found !!!");
+    }
+  } catch (err) {
+    await logger(req, "Error", err);
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
+router.post("/sell", async (req, res) => {
   try {
     const { usid, role } = req.user;
     const {
@@ -13,10 +58,10 @@ router.post("/add", async (req, res) => {
       paymentMethod,
       paymentInfo,
       quantity,
+      currency,
+      pricePerOne,
       fullName,
-      codeForExchange,
       description,
-      type,
     } = req.body;
 
     //verification inputs
@@ -28,15 +73,79 @@ router.post("/add", async (req, res) => {
       paymentInfo: paymentInfo,
       quantity: quantity,
       fullName: fullName,
-      codeForExchange: codeForExchange,
       description: description,
       status: process.env.PENDING,
       actions: [{ action: "Pending" }],
       owner: usid,
-      type: type,
+      type: process.env.SELL,
+      pricePerOne: pricePerOne,
+      totalToBePaid: pricePerOne * quantity,
+      currency: currency,
     });
 
     return res.status(201).json({ message: order });
+  } catch (err) {
+    await logger(req, "Error", err);
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
+router.post("/buy", async (req, res) => {
+  try {
+    const { usid, role } = req.user;
+    const {
+      server,
+      characterName,
+      paymentMethod,
+      paymentInfo,
+      quantity,
+      fullName,
+      currency,
+      description,
+      pricePerOne,
+    } = req.body;
+
+    //verification inputs
+
+    const order = await Order.create({
+      server: server,
+      characterName: characterName,
+      paymentMethod: paymentMethod, // sanitize: convert email to lowercase
+      paymentInfo: paymentInfo,
+      quantity: quantity,
+      fullName: fullName,
+      description: description,
+      status: process.env.PENDING,
+      actions: [{ action: "Pending" }],
+      owner: usid,
+      type: process.env.BUY,
+      pricePerOne: pricePerOne,
+      totalToBePaid: pricePerOne * quantity,
+      currency: currency,
+    });
+
+    return res.status(201).json({ message: order });
+  } catch (err) {
+    await logger(req, "Error", err);
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
+router.post("/checkout", async (req, res) => {
+  try {
+    const { usid, role } = req.user;
+    const { idOrder } = req.body;
+    let id = mongoose.Types.ObjectId(idOrder);
+
+    const order = await Order.findOne({ _id: id });
+
+    if (order)
+      return res
+        .status(201)
+        .json({ message: "Next feature => Payment Process" });
+    return res.status(404).json({ message: "Order Not Found !!!" });
   } catch (err) {
     await logger(req, "Error", err);
     console.log(err);

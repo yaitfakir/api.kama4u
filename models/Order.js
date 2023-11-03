@@ -6,6 +6,7 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: { type: String },
   paymentInfo: { type: String },
   quantity: { type: Number },
+  pricePerOne: { type: Number },
   fullName: { type: String },
   codeForExchange: { type: String },
   description: { type: String },
