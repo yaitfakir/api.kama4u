@@ -20,6 +20,7 @@ console.log("FrontEnd running ", process.env.CLIENT_URL);
 
 // Define Routes
 app.use("/api/home", require("./routes/home"));
+app.use("/api/analytics", verifyToken, require("./routes/analytics"));
 app.use("/api/order", verifyToken, require("./routes/order"));
 app.use("/api/global", require("./routes/global"));
 app.use("/api/auth", require("./routes/auth"));

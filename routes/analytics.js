@@ -2,41 +2,49 @@ const express = require("express");
 const router = express.Router();
 const logger = require("../utils/logger");
 
-const Post = require("../models/Post");
+const Order = require("../models/Order");
 
-router.post("/dash", async (req, res) => {
+router.get("/dash", async (req, res) => {
   try {
-    const { periode, market } = req.body;
+    // const { periode } = req.body;
 
     // Barchart Filter
-    const marketFilter = !market ? {} : { market: market };
+    // const marketFilter = !market ? {} : { market: market };
 
     //Pipline
-    const pipelineChart = [
-      {
-        $match: marketFilter,
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: -1 } },
-      { $limit: periode },
-    ];
+    // const pipelineChart = [
+    //   {
+    //     $match: marketFilter,
+    //   },
+    //   { $sort: { _id: -1 } },
+    //   { $limit: periode },
+    // ];
 
     //Projection
-    const barchart = await Post.aggregate(pipelineChart);
-    const totalPosts = barchart.reduce((acc, curr) => acc + curr.count, 0);
-    const marketCount = await Post.distinct("market");
-
-    const response = {
-      totalPosts: totalPosts,
-      marketCount: marketCount.length,
-      barchart: barchart,
+    const orders = await Order.find({});
+    let pending = orders.filter((f) => f.status == process.env.PENDING)?.length;
+    let paid = orders.filter((f) => f.status == process.env.PAID)?.length;
+    let cancled = orders.filter(
+      (f) =>
+        f.status ==
+        (process.env.CANCLED || process.env.ISSUE || process.env.REFUND)
+    )?.length;
+    let outMontant = orders.filter(
+      (f) => f.type == process.env.BUY && f.status == process.env.PAID
+    )?.length;
+    let inMontant = orders.filter(
+      (f) => f.type == process.env.SELL && f.status == process.env.PAID
+    )?.length;
+    const resp = {
+      total: orders?.length,
+      pending: pending,
+      paid: paid,
+      cancled: cancled,
+      outMontant: outMontant,
+      inMontant: inMontant,
     };
-    return res.status(200).json(response);
+
+    return res.status(200).json(resp);
   } catch (err) {
     await logger(req, "Error", err);
     console.log("An error occured");
@@ -45,13 +53,13 @@ router.post("/dash", async (req, res) => {
   }
 });
 
-router.get("/market-stats", async (req, res) => {
+router.get("/transaction-stats", async (req, res) => {
   try {
     // const { periode, associateId, zone } = req.body;
     const pipeline = [
       {
         $group: {
-          _id: "$market.store",
+          _id: "$status",
           count: { $sum: 1 },
         },
       },
