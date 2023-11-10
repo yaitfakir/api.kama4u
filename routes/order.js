@@ -10,6 +10,14 @@ router.post("/list", async (req, res) => {
     var { paginator, filter } = req.body;
     let id = mongoose.Types.ObjectId(usid);
 
+    filter = { ...filter };
+    if (filter)
+      Object.keys(filter).forEach((key) => {
+        if (filter[key] == null) {
+          delete filter[key];
+        }
+      });
+
     if (role != process.env.SUP_ADMIN) {
       filter = { ...filter, owner: id };
     }
@@ -193,14 +201,50 @@ router.post("/action", async (req, res) => {
   }
 });
 
+router.get("/action/cancel/:id_order", async (req, res) => {
+  try {
+    const { usid } = req.user;
+    const { id_order } = req.params;
+    let idUser = mongoose.Types.ObjectId(usid);
+    let idOrder = mongoose.Types.ObjectId(id_order);
+
+    const existOrder = await Order.findOne({ _id: idOrder, owner: idUser });
+    if (!existOrder) {
+      return res.status(404).json({
+        error: "Order Doesn't Exist !!!",
+      });
+    }
+
+    const existAction = existOrder?.status;
+    const action = process.env.CANCELED;
+    let shouldAction = GetPossibleActions(existAction)?.includes(action);
+    console.log("should Action", action);
+
+    if (shouldAction) {
+      existOrder.status = action;
+      existOrder.actions.push({ action, motif: "Canceled by client" });
+      existOrder.save();
+    } else
+      return res.status(404).json({
+        error: "Action not Possible !!!",
+      });
+
+    return res
+      .status(200)
+      .json({ message: { _id: existOrder._id, status: existOrder.status } });
+  } catch (err) {
+    await logger(req, "Error", err);
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
 function GetPossibleActions(action) {
   switch (action) {
     case "pending":
       return ["accepted", "canceled"];
     case "accepted":
       return ["paid", "canceled"];
-    case "paid" || "issue" || "refund":
-      return ["closed"];
     case "canceled":
       return ["issue", "refund"];
     default:

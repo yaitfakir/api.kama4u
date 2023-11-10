@@ -1,127 +1,38 @@
-const payment = {
-  name: "payment",
-  option: [
-    {
-      text: "Paypal",
-    },
-    {
-      text: "Skrill",
-    },
-    // {
-    //   text: "SEPA",
-    // },
-    {
-      text: "CIH-banque",
-    },
-    {
-      text: "Wafacash",
-    },
-    {
-      text: "CashPlus",
-    },
-    {
-      text: "BMCE-banque",
-    },
-    {
-      text: "Attijari-banque",
-    },
-    {
-      text: "BitCoin",
-    },
-    {
-      text: "Usdt",
-    },
-    {
-      text: "Alipay",
-    },
-  ],
-};
+const payment = [
+  "Paypal",
+  "Skrill",
+  "CIH-banque",
+  "Wafacash",
+  "CashPlus",
+  "BMCE-banque",
+  "Attijari-banque",
+  "BitCoin",
+  "Usdt",
+  "Alipay",
+];
 
-const servers = {
-  name: "servers",
-  option: [
-    {
-      text: "Draconiros",
-    },
-    {
-      text: "HellMina",
-    },
-    {
-      text: "Imagiro",
-    },
-    {
-      text: "Orukam",
-    },
-    {
-      text: "TalKasha",
-    },
-    {
-      text: "Tylezia",
-    },
-    {
-      text: "Brutas",
-    },
-    {
-      text: "Dodge",
-    },
-    {
-      text: "Grandapan",
-    },
-    {
-      text: "Herdegrize",
-    },
-    {
-      text: "Oshimo",
-    },
-    {
-      text: "Terra Cogita",
-    },
-    {
-      text: "Crail",
-    },
-    {
-      text: "Boune",
-    },
-    {
-      text: "Galgarion",
-    },
-    {
-      text: "Eratz",
-    },
-    {
-      text: "Henual",
-    },
-    {
-      text: "Pandora-wakfu",
-    },
-    {
-      text: "Rubilax-wakfu",
-    },
-  ],
-};
+const servers = [
+  "Draconiros",
+  "HellMina",
+  "Imagiro",
+  "Orukam",
+  "TalKasha",
+  "Tylezia",
+  "Brutas",
+  "Dodge",
+  "Grandapan",
+  "Herdegrize",
+  "Oshimo",
+  "Terra Cogita",
+  "Crail",
+  "Boune",
+  "Galgarion",
+  "Eratz",
+  "Henual",
+  "Pandora-wakfu",
+  "Rubilax-wakfu",
+];
 
-const actions = {
-  name: "servers",
-  option: [
-    {
-      text: "pending",
-    },
-    {
-      text: "accepted",
-    },
-    {
-      text: "paid",
-    },
-    {
-      text: "cancled",
-    },
-    {
-      text: "issue",
-    },
-    {
-      text: "refund",
-    },
-  ],
-};
+const actions = ["pending", "accepted", "paid", "cancled", "issue", "refund"];
 
 module.exports = { payment, servers, actions };

@@ -186,50 +186,31 @@ router.post("/register", async (req, res) => {
 //   // Our register logic ends here
 // });
 
-// router.post("/reset", async (req, res) => {
-//   try {
-//     const user = await User.findOne({ email: req.body.email });
-//     if (!user)
-//       return res.status(400).json("User with given email doesn't exist");
+router.post("/reset", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user)
+      return res.status(400).json("User with given email doesn't exist");
 
-//     // const link = `${process.env.CLIENT_URL}api/auth/password-reset/${user._id}`;
-//     const link = `${process.env.CLIENT_URL}auth/reset-password/${user._id}`;
-//     const email_config = {
-//       link: link,
-//       title: "Password reset",
-//       header: "Reset Your Password",
-//       action: "Reset",
-//     };
-//     await sendEmail(user.email, "Password reset", email_config);
+    // const link = `${process.env.CLIENT_URL}api/auth/password-reset/${user._id}`;
+    const link = `${process.env.CLIENT_URL}auth/reset-password/${user._id}`;
+    const email_config = {
+      link: link,
+      title: "Password reset",
+      header: "Reset Your Password",
+      action: "Reset",
+    };
+    await sendEmail(user.email, "Password reset", email_config);
 
-//     // res.status(200).json("password reset link sent to your email account");
-//     return res.status(200).json({ link: link });
-//   } catch (err) {
-//     await logger(req, "Error", err);
+    // res.status(200).json("password reset link sent to your email account");
+    return res.status(200).json({ link: link });
+  } catch (err) {
+    await logger(req, "Error", err);
 
-//     console.log("An error occured");
-//     console.log(err);
-//     return res.status(500).json("An error occured");
-//   }
-// });
-
-// router.post("/password-reset/:userId", async (req, res) => {
-//   try {
-//     const { password } = req.body;
-//     const id = req.params.userId;
-//     const user = await User.findById({ _id: id });
-//     if (!user) return res.status(400).json("invalid link or expired");
-
-//     user.password = await bcrypt.hash(password, 10);
-//     user.save();
-//     return res.status(200).json("password reset sucessfully.");
-//   } catch (err) {
-//     await logger(req, "Error", err);
-
-//     console.log("An error occured");
-//     console.log(err);
-//     return res.status(500).json("An error occured");
-//   }
-// });
+    console.log("An error occured");
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
 
 module.exports = router;

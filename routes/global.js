@@ -8,7 +8,7 @@ const verifyToken = require("../middleware/auth");
 
 router.get("/servers", async (req, res) => {
   try {
-    var result = seeds.servers.option;
+    var result = seeds.servers;
     if (result) {
       return res.status(200).json(result);
     } else {
@@ -23,7 +23,7 @@ router.get("/servers", async (req, res) => {
 
 router.get("/payment", async (req, res) => {
   try {
-    var result = seeds.payment.option;
+    var result = seeds.payment;
     if (result) {
       return res.status(200).json(result);
     } else {
@@ -46,7 +46,7 @@ router.get("/actions", verifyToken, async (req, res) => {
       });
     }
 
-    var result = seeds.actions.option;
+    var result = seeds.actions;
     if (result) {
       return res.status(200).json(result);
     } else {

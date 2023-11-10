@@ -24,6 +24,42 @@ const orderSchema = new mongoose.Schema({
   currency: { type: String },
   totalToBePaid: { type: Number },
   rate: { type: Number },
+  possibleActions: {
+    type: String,
+    default: function () {
+      {
+        switch (this.status) {
+          case "pending":
+            return "accepted";
+          case "accepted":
+            return "paid";
+          case "paid" || "issue" || "refund":
+            return "closed";
+          case "canceled":
+            return "issue";
+          default:
+            break;
+        }
+        return "";
+      }
+    },
+  },
 });
+
+function GetPossibleActions(status) {
+  switch (status) {
+    case "pending":
+      return ["accepted", "canceled"];
+    case "accepted":
+      return ["paid", "canceled"];
+    case "paid" || "issue" || "refund":
+      return ["closed"];
+    case "canceled":
+      return ["issue", "refund"];
+    default:
+      break;
+  }
+  return [];
+}
 
 module.exports = mongoose.model("Order", orderSchema);
