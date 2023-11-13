@@ -3,6 +3,7 @@ const router = express.Router();
 const logger = require("../utils/logger");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
+const User = require("../models/User");
 
 router.post("/list", async (req, res) => {
   try {
@@ -18,7 +19,8 @@ router.post("/list", async (req, res) => {
         }
       });
 
-    if (role != process.env.SUP_ADMIN) {
+    let isAdmin = role == process.env.SUP_ADMIN;
+    if (!isAdmin) {
       filter = { ...filter, owner: id };
     }
 
@@ -37,10 +39,33 @@ router.post("/list", async (req, res) => {
       {
         $limit: paginator?.limit || 10,
       },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+        },
+      },
+      {
+        $project: {
+          __v: 0,
+          owner: { confirmed: 0, password: 0, createdAt: 0, __v: 0, role: 0 },
+        },
+      },
     ];
+
     const data = await Order.aggregate(pipline);
     const count = await Order.countDocuments(filter);
 
+    if (isAdmin) {
+      data.forEach((e) => {
+        const existAction = e?.status;
+        let PossibleAction = GetPossibleActions(existAction);
+        e.PossibleAction = PossibleAction;
+        e.owner = e.owner[0];
+      });
+    }
     var result = {
       count: count,
       data: data,
@@ -160,8 +185,9 @@ router.post("/checkout", async (req, res) => {
 router.post("/action", async (req, res) => {
   try {
     const { role } = req.user;
-    const { idOrder, action, motif } = req.body;
+    var { idOrder, action, motif } = req.body;
     let id = mongoose.Types.ObjectId(idOrder);
+    action = action.toLowerCase();
 
     if (role != process.env.SUP_ADMIN) {
       return res.status(403).json({
@@ -175,9 +201,9 @@ router.post("/action", async (req, res) => {
       });
     }
 
-    if (["Issue", "Refund"].includes(action) && !motif) {
+    if (["issue", "refund"].includes(action) && !motif) {
       return res.status(400).json({
-        error: "You should insert a Description !!!",
+        error: "You should insert a Motif !!!",
       });
     }
     const existAction = existOrder?.status;
@@ -218,7 +244,6 @@ router.get("/action/cancel/:id_order", async (req, res) => {
     const existAction = existOrder?.status;
     const action = process.env.CANCELED;
     let shouldAction = GetPossibleActions(existAction)?.includes(action);
-    console.log("should Action", action);
 
     if (shouldAction) {
       existOrder.status = action;
@@ -232,6 +257,39 @@ router.get("/action/cancel/:id_order", async (req, res) => {
     return res
       .status(200)
       .json({ message: { _id: existOrder._id, status: existOrder.status } });
+  } catch (err) {
+    await logger(req, "Error", err);
+    console.log(err);
+    return res.status(500).json("An error occured");
+  }
+});
+
+router.post("/comment/add/:id_order", async (req, res) => {
+  try {
+    const { usid, role } = req.user;
+    const { id_order } = req.params;
+    const { comment } = req.body;
+    let idUser = mongoose.Types.ObjectId(usid);
+    let idOrder = mongoose.Types.ObjectId(id_order);
+
+    const _user = await User.findOne({ _id: idUser });
+    const existOrder = await Order.findOne({ _id: idOrder });
+    if (!existOrder) {
+      return res.status(404).json({
+        error: "Order Doesn't Exist !!!",
+      });
+    }
+
+    existOrder.comments.push({
+      comment,
+      owner:
+        role == process.env.SUP_ADMIN
+          ? "Kamas4u Support"
+          : _user.firstName + " " + _user.lastName,
+    });
+    existOrder.save();
+
+    return res.status(200).json(existOrder);
   } catch (err) {
     await logger(req, "Error", err);
     console.log(err);

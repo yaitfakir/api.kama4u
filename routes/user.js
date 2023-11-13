@@ -50,18 +50,18 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/password-reset", verifyToken, async (req, res) => {
+router.post("/change-password", verifyToken, async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { currPass, newPass } = req.body;
     const { usid } = req.user;
 
     const user = await User.findById({ _id: usid });
     if (!user) return res.status(400).json("User not found !!!");
 
-    let passMatch = await bcrypt.compare(oldPassword, user.password);
+    let passMatch = await bcrypt.compare(currPass, user.password);
     console.log("pass match", passMatch);
     if (passMatch) {
-      user.password = await bcrypt.hash(newPassword, 10);
+      user.password = await bcrypt.hash(newPass, 10);
       user.save();
       return res.status(200).json("password reset sucessfully.");
     }

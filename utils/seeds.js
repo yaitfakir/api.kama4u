@@ -1,6 +1,5 @@
 const payment = [
   "Paypal",
-  "Skrill",
   "CIH-banque",
   "Wafacash",
   "CashPlus",
@@ -8,7 +7,8 @@ const payment = [
   "Attijari-banque",
   "BitCoin",
   "Usdt",
-  "Alipay",
+  // "Skrill",
+  // "Alipay",
 ];
 
 const servers = [
