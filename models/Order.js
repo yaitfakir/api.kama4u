@@ -23,7 +23,8 @@ const orderSchema = new mongoose.Schema({
     {
       createdAt: { type: Date, default: Date.now },
       comment: String,
-      owner: String,
+      owner: { _id: String, name: String, role: String },
+      isRead: { type: Boolean, default: false },
     },
   ],
   owner: { type: mongoose.Types.ObjectId, ref: "User" },

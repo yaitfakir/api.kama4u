@@ -6,13 +6,13 @@ const verifyToken = require("./middleware/auth");
 
 // Connect to database
 connectDB();
-// app.use(express.json());
 app.use(express.json());
 
 // Cors
 app.use(
   cors({
     origin: "*",
+    methods: ["GET", "POST"],
   })
 );
 
@@ -23,6 +23,7 @@ app.use("/api/home", require("./routes/home"));
 app.use("/api/analytics", verifyToken, require("./routes/analytics"));
 app.use("/api/order", verifyToken, require("./routes/order"));
 app.use("/api/global", require("./routes/global"));
+app.use("/api/chat", verifyToken, require("./routes/chat"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/user", verifyToken, require("./routes/user"));
 

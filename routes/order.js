@@ -282,10 +282,14 @@ router.post("/comment/add/:id_order", async (req, res) => {
 
     existOrder.comments.push({
       comment,
-      owner:
-        role == process.env.SUP_ADMIN
-          ? "Kamas4u Support"
-          : _user.firstName + " " + _user.lastName,
+      owner: {
+        _id: usid,
+        name:
+          role == process.env.SUP_ADMIN
+            ? "Support"
+            : _user.firstName + " " + _user.lastName,
+        role: role,
+      },
     });
     existOrder.save();
 
